@@ -218,20 +218,25 @@ const char *getMachineName() {
 
 #else // !DARWIN
 
-	static void getCpuid(unsigned int *p, unsigned int ax) {
-		__asm __volatile
-		(   "movl %%ebx, %%esi\n\t"
-			"cpuid\n\t"
-			"xchgl %%ebx, %%esi"
-		: "=a" (p[0]), "=S" (p[1]),
-		"=c" (p[2]), "=d" (p[3])
-		: "0" (ax)
-		);
+	static void getCpuid(unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx) {
+#ifdef __arm__
+		*eax = 0xFD;
+		*ebx = 0xC1;
+		*ecx = 0x72;
+		*edx = 0x1D;
+		return;
+#else
+		asm volatile("cpuid" :
+			"=a" (*eax),
+			"=b" (*ebx),
+			"=c" (*ecx),
+			"=d" (*edx) : "0" (*eax), "2" (*ecx));
+#endif
 	}
 
 	unsigned short getCpuHash() {
 		unsigned int cpuinfo[4] = {0, 0, 0, 0};
-		getCpuid(cpuinfo, 0);
+		getCpuid(&cpuinfo[0], &cpuinfo[1], &cpuinfo[2], &cpuinfo[3]);
 		unsigned short hash = 0;
 		unsigned int *ptr = (&cpuinfo[0]);
 		for (unsigned int i = 0; i < 4; i++)
