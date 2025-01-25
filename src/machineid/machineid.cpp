@@ -1,5 +1,9 @@
 #include "machineid/machineid.h"
+#include <cstdint>
 #include <sstream>
+
+using u16 = uint16_t;
+using u32 = uint32_t;
 
 namespace machineid {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
