@@ -169,7 +169,7 @@ const char *getMachineName() {
 		bool foundMac1 = false;
 		struct ifreq *ifr;
 		for (ifr = conf.ifc_req; (char *)ifr < (char *)conf.ifc_req + conf.ifc_len; ifr++) {
-			if (ifr->ifr_addr.sa_data == (ifr + 1)->ifr_addr.sa_data)
+			if (memcmp(ifr->ifr_addr.sa_data, (ifr + 1)->ifr_addr.sa_data, IFHWADDRLEN) == 0)
 				continue;  // duplicate, skip it
 
 			if (ioctl(sock, SIOCGIFFLAGS, ifr))
