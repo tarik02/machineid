@@ -223,18 +223,29 @@ const char *getMachineName() {
 #else // !DARWIN
 
 	static void getCpuid(unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx) {
-#ifdef __arm__
+#if defined(__arm__)
 		*eax = 0xFD;
 		*ebx = 0xC1;
 		*ecx = 0x72;
 		*edx = 0x1D;
-		return;
-#else
+#elif defined(__aarch64__)
+		uint64_t midr;
+
+		asm volatile("mrs %0, MIDR_EL1" : "=r"(midr));
+
+		// Split the 64-bit value into four 32-bit parts
+		*eax = (uint32_t)(midr & 0xFFFFFFFF);
+		*ebx = (uint32_t)((midr >> 32) & 0xFFFFFFFF);
+		*ecx = 0;
+		*edx = 0;
+#elif defined(__x86_64__) || defined(__i386__)
 		asm volatile("cpuid" :
 			"=a" (*eax),
 			"=b" (*ebx),
 			"=c" (*ecx),
 			"=d" (*edx) : "0" (*eax), "2" (*ecx));
+#else
+#error Unsupported CPU architecture
 #endif
 	}
 
